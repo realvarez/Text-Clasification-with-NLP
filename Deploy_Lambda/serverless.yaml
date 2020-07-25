@@ -1,0 +1,29 @@
+service: clasificator_dimensions_rnn
+
+plugins:
+  - serverless-python-requirements
+
+provider:
+  name: aws
+  runtime: python3.6
+  region: us-east-1
+  deploymentBucket:
+    name: titleproyectbucket2019
+  iamRoleStatements: 
+    - Effect: 'Allow'
+      Action:
+        - 's3:GetObject'
+      Resource:
+          - 'arn:aws:s3:::titleproyectbucket2019/*'
+functions:
+  clasificator_dims: 
+    name: clasificator_dimensions
+    description: A Lambda that use a nlp lstm keras clasificator to clasify text about opinions to EsgCompass.
+    events: 
+      - http:
+          path: /areaInputModel
+          method: POST
+
+custom:
+  pythonRequirements:
+    slim: true
