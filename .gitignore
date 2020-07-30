@@ -2,3 +2,4 @@
 .venv/
 */model.pkl
 *.pkl
+*.h5
