@@ -1,0 +1,5 @@
+acurracy mean 0.6936575052854123
+media precision 0.6963494180514902
+media recall 0.6942660980875051
+media fscore 0.6928167256306086
+media support 709.5

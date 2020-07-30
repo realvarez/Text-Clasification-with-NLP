@@ -1,8 +1,0 @@
-loss mean 0.45592171549797056
-acurracy mean 0.7866807639598846
-media precision clase 0 0.7884060708091588
-media precision clase 1 0.7874321374306337
-media recall clase 0 0.7782467552837298
-media recall clase 1 0.7950026784245162
-media fscore clase 0 0.7822966593455071
-media fscore clase 1 0.7902417570179276
