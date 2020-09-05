@@ -35,7 +35,6 @@ def normalize_text(tokens):
                 tokens.pop(pos)
     return tokens
 
-
 def create_lemma_dict():
     lemmaDiccionario = {}
     with open('./lemma.txt', 'rb') as fichero:
@@ -87,45 +86,32 @@ def get_dimension_of_text(text, area):
             'body': json.dumps('El area ingresada no coincide, puede ser Gobierno Corporativo, Medio Ambiente, Social Externo o Social Interno')
         }
     list_words = processText(text)
-    vocab = list(uwu.read_csv('./vocabulary.csv'))
+    vocab = list(uwu.read_csv('./Herramientas/vocabulary.csv'))
     list_words_numeric = wordsToNumbers(list_words, vocab)
     if area == 'Gobierno Corporativo':
-        yaml_file = open('./GOB/modelGOB.yaml', 'r')
-        loaded_model_yaml = yaml_file.read()
-        yaml_file.close()
-        RNNmodel = model_from_yaml(loaded_model_yaml)
-        RNNmodel.load_weights("./GOB/modelGOB.h5")
+        RNNmodel = tf.keras.models.load_model('model_gob.h5')
         
         return RNNmodel.predict_classes(np.array([list_words_numeric]))
 
     elif area == 'Medio Ambiente':
-        yaml_file = open('./MA/modelMA.yaml', 'r')
-        loaded_model_yaml = yaml_file.read()
-        yaml_file.close()
-        RNNmodel = model_from_yaml(loaded_model_yaml)
-        RNNmodel.load_weights("./MA/modelMA.h5")
+        RNNmodel = tf.keras.models.load_model('./model_amb.h5')
         
         return RNNmodel.predict_classes(np.array([list_words_numeric]))
 
     elif area == 'Social Externo':
-        yaml_file = open('./SEXT/modelSEXT.yaml', 'r')
-        loaded_model_yaml = yaml_file.read()
-        yaml_file.close()
-        RNNmodel = model_from_yaml(loaded_model_yaml)
-        RNNmodel.load_weights("./SEXT/modelSEXT.h5")
+        RNNmodel = tf.keras.models.load_model('./model_soce.h5')
         return RNNmodel.predict_classes(np.array([list_words_numeric]))
 
     elif area == 'Social Interno':
-        yaml_file = open('./SINT/modelSINT.yaml', 'r')
-        loaded_model_yaml = yaml_file.read()
-        yaml_file.close()
-        RNNmodel = model_from_yaml(loaded_model_yaml)
-        RNNmodel.load_weights("./SINT/modelSINT.h5")
+        RNNmodel = tf.keras.models.load_model('./model_soci.h5')
         return RNNmodel.predict_classes(np.array([list_words_numeric]))
-
 
 @app.route('/classify/v1', methods=["POST"])
 def classify_text():
+    nltk.download('punkt')
+    nltk.download('stopwords')
+
+
     body = request.get_json()
     area = body['area']
     text = body['text']
@@ -136,4 +122,22 @@ def classify_text():
         'body': json.dumps(int(prediction[0]))
     }
 
-# app.run(port=5000, debug =False)
+@app.route('/')
+def presentation():
+    return '''
+    Desarrollo de Proyecto de tesis de Ricardo Alvarez Zambrano
+    Consiste en un clasificador de texto de dimensiones ESG para ESG Compass
+    Para clasificar texto se debe hacer una request "POST" a la ruta < /classify/v1 > y en el body incluir un json los siguientes campos
+    {
+        'area':'Gobierno Corporativo',
+        'text':'El texto que se desea clasificar'
+    }
+    Las areas posibles que acepta el modelo son:
+    - Gobierno Corporativo
+    - Social Externo
+    - Social Interno
+    - Medio Ambiente
+    '''
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", debug=False, port=80)

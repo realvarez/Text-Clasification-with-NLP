@@ -1,0 +1,49 @@
+Area_Name;Dimension_Name;Answer^
+---
+:en: "Environment"
+:es: "Medio Ambiente"
+:pt: "";
+---
+:en: "Community (Environmental)"
+:es: "Comunidad (Ambiental)"
+:pt: "";
+----
+content: 
+       positive: "0"
+       negative: "Mas cuarteles policías... en villa los claveles de maipú no sabemos que hacer con la delincuencia y carabineros no llega siempre debido a su sobre carga laboral"^
+---
+:en: "Overall Trust"
+:es: "Confianza General"
+:pt: "";
+---
+:en: "Overall Trust"
+:es: "Confianza General"
+:pt: "";
+----
+content: 
+       positive: "Buena gestión"
+       negative: ""^
+---
+:en: "Social External"
+:es: "Social Externo"
+:pt: "";
+---
+:en: "Perceived Value"
+:es: "Valor"
+:pt: "Valor";
+----
+content: 
+       positive: "De acuerdo relación precio calidad excepto infraestructura que esta en proces de mejora"
+       negative: ""^
+---
+:en: "Social Internal"
+:es: "Social Interno"
+:pt: "";
+---
+:en: "Cultural Identity"
+:es: "Identidad Cultural"
+:pt: "";
+----
+content: 
+       positive: ""
+       negative: "Se debe mejorar en este aspecto, ellos NO participan en los talleres de "Somos CAP""^
