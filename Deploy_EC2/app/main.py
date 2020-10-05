@@ -1,11 +1,22 @@
-import re, unicodedata, nltk, boto3, json
+import re, unicodedata, nltk, boto3, json, ssl
 import pandas as uwu
 import numpy as np
 from nltk.corpus import stopwords
 from flask import Flask, request, jsonify
 from tensorflow.keras.models import model_from_yaml
+import tensorflow as tf
+from flask import jsonify
 
 app = Flask(__name__)
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+print('Instalando librerias de NLTK')
+nltk.download('punkt')
+nltk.download('stopwords')
 
 def remove_stop_words(list_tokens):
     stop = stopwords.words('spanish')
@@ -14,13 +25,11 @@ def remove_stop_words(list_tokens):
             list_tokens.pop(list_tokens.index(token))
     return list_tokens
 
-
 def remove_void_elements(tokens):
     for token in tokens:
         if token == '' or token == " " or token == "  ":
             tokens.pop(tokens.index(token))
     return tokens
-
 
 def normalize_text(tokens):
     for token in tokens:
@@ -37,7 +46,7 @@ def normalize_text(tokens):
 
 def create_lemma_dict():
     lemmaDiccionario = {}
-    with open('./lemma.txt', 'rb') as fichero:
+    with open('/app/Herramientas/lemma.txt', 'rb') as fichero:
         datos = (fichero.read().decode('utf8').replace(u'\r', u'').split(u'\n'))
         datos = ([avance.split(u'\t') for avance in datos])
     for avance in datos:
@@ -76,67 +85,62 @@ def processText(Text):
 
 def get_dimension_of_text(text, area):
     if not isinstance(text, str) or len(text) < 5:
-        return {
-            'statusCode': 200,
-            'body': json.dumps('Texto a clasificar mal ingresado o muy corto (minimo 5 palabras)')
-        }
+        return 'Texto a clasificar mal ingresado o muy corto (minimo 5 palabras)', 200
     if area not in ['Gobierno Corporativo', 'Medio Ambiente', 'Social Externo', 'Social Interno']:
-        return {
-            'statusCode': 200,
-            'body': json.dumps('El area ingresada no coincide, puede ser Gobierno Corporativo, Medio Ambiente, Social Externo o Social Interno')
-        }
+        return 'El area ingresada no coincide, puede ser Gobierno Corporativo, Medio Ambiente, Social Externo o Social Interno', 200
     list_words = processText(text)
     vocab = list(uwu.read_csv('./Herramientas/vocabulary.csv'))
     list_words_numeric = wordsToNumbers(list_words, vocab)
     if area == 'Gobierno Corporativo':
+        df = uwu.read_csv('./Herramientas/dims_gob.csv', sep=";")
         RNNmodel = tf.keras.models.load_model('model_gob.h5')
-        
-        return RNNmodel.predict_classes(np.array([list_words_numeric]))
-
     elif area == 'Medio Ambiente':
+        df = uwu.read_csv('./Herramientas/dims_amb.csv', sep=";")
         RNNmodel = tf.keras.models.load_model('./model_amb.h5')
-        
-        return RNNmodel.predict_classes(np.array([list_words_numeric]))
-
     elif area == 'Social Externo':
+        df = uwu.read_csv('./Herramientas/dims_soce.csv', sep=";")
         RNNmodel = tf.keras.models.load_model('./model_soce.h5')
-        return RNNmodel.predict_classes(np.array([list_words_numeric]))
-
     elif area == 'Social Interno':
+        df = uwu.read_csv('./Herramientas/dims_soci.csv', sep=";")
         RNNmodel = tf.keras.models.load_model('./model_soci.h5')
-        return RNNmodel.predict_classes(np.array([list_words_numeric]))
+
+    dim = RNNmodel.predict_classes(np.array([list_words_numeric]))[0]
+    dim_str = df.Dimension[dim]
+    return dim, dim_str
 
 @app.route('/classify/v1', methods=["POST"])
 def classify_text():
-    nltk.download('punkt')
-    nltk.download('stopwords')
-
-
     body = request.get_json()
-    area = body['area']
-    text = body['text']
-    prediction = get_dimension_of_text(text, area)
-    print(prediction[0])
-    return {
-        'statusCode': 200,
-        'body': json.dumps(int(prediction[0]))
-    }
+    if 'area' in body:
+        area = body['area']
+    else:
+        return 'Area no encontrada', 200    
+    if 'text' in body:
+        text = body['text']
+    else:
+        return 'Texto no encontrado', 200
+    dimension, dimension_string = get_dimension_of_text(text, area)
+    response = {
+            'dim_cod': int(dimension),
+            'dim_str': dimension_string
+        }
+    return response, 200
 
 @app.route('/')
 def presentation():
     return '''
-    Desarrollo de Proyecto de tesis de Ricardo Alvarez Zambrano
-    Consiste en un clasificador de texto de dimensiones ESG para ESG Compass
-    Para clasificar texto se debe hacer una request "POST" a la ruta < /classify/v1 > y en el body incluir un json los siguientes campos
-    {
-        'area':'Gobierno Corporativo',
-        'text':'El texto que se desea clasificar'
-    }
-    Las areas posibles que acepta el modelo son:
-    - Gobierno Corporativo
-    - Social Externo
-    - Social Interno
-    - Medio Ambiente
+    Desarrollo de Proyecto de tesis de Ricardo Alvarez Zambrano<br>
+    Consiste en un clasificador de texto de dimensiones ESG para ESG Compass<br>
+    Para clasificar texto se debe hacer una request "POST" a la ruta < /classify/v1 > y en el body incluir un json los siguientes campos<br>
+    {<br>
+        'area':'Gobierno Corporativo',<br>
+        'text':'El texto que se desea clasificar'<br>
+    }<br>
+    Las areas posibles que acepta el modelo son:<br>
+    - Gobierno Corporativo<br>
+    - Social Externo<br>
+    - Social Interno<br>
+    - Medio Ambiente<br>
     '''
 
 if __name__ == "__main__":
