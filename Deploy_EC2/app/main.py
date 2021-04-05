@@ -1,4 +1,4 @@
-import re, unicodedata, nltk, boto3, json, ssl
+import re, unicodedata, nltk, json, ssl
 import pandas as uwu
 import numpy as np
 from nltk.corpus import stopwords
@@ -14,6 +14,7 @@ except AttributeError:
     pass
 else:
     ssl._create_default_https_context = _create_unverified_https_context
+    
 print('Instalando librerias de NLTK')
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -103,10 +104,14 @@ def get_dimension_of_text(text, area):
     elif area == 'Social Interno':
         df = uwu.read_csv('./Herramientas/dims_soci.csv', sep=";")
         RNNmodel = tf.keras.models.load_model('./model_soci.h5')
+    
+    print("\n\n\nello, como estas")
 
     dim = RNNmodel.predict_classes(np.array([list_words_numeric]))[0]
+    print("\n\n\nello, como estas")
+    
     dim_str = df.Dimension[dim]
-    return dim, dim_str
+    return dim, dim_str, list_words
 
 @app.route('/classify/v1', methods=["POST"])
 def classify_text():
@@ -119,11 +124,12 @@ def classify_text():
         text = body['text']
     else:
         return 'Texto no encontrado', 200
-    dimension, dimension_string = get_dimension_of_text(text, area)
+    dimension, dimension_string, palabras = get_dimension_of_text(text, area)
     response = {
             'dim_cod': int(dimension),
-            'dim_str': dimension_string
-        }
+            'dim_str': dimension_string,
+            'palabras': palabras
+            }
     return response, 200
 
 @app.route('/')

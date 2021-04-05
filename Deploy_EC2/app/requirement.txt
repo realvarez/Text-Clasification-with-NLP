@@ -1,6 +1,7 @@
 setuptools==41.0.0
 tensorflow==2.2.0rc1
-keras
+numpy==1.19.5
+keras==2.2.4
 pandas==1.1.0
 nltk
 gensim
